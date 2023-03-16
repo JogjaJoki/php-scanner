@@ -6,7 +6,7 @@
         private $text = '';
         function __construct($u, $inband = true, $blind = true) {
             $this->url = $u;
-            $this->send($u);
+            $this->scan_vuln($this->url);
             //new CrawlClass($url);
         }
 
@@ -27,7 +27,7 @@
             'quoted string not properly terminated'
         );
 
-        public function send($host) {
+        public function scan_vuln($host) {
             $conn = curl_init($host . "'");
             curl_setopt($conn, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($conn, CURLOPT_TIMEOUT, 200);
@@ -48,7 +48,13 @@
             } else {
                 print false;
             }
+
+            if($this->text == ''){
+                $this->text =  "[+] SQL Injection vulnerable not detected : $this->url\n";
+                print $this->text;
+            }
         }
     }
 
     new SqliScanner('http://testphp.vulnweb.com/artists.php?artist=3');
+    new SqliScanner('http://testphp.vulnweb.com/');
