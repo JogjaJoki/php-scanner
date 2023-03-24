@@ -1,7 +1,8 @@
 <?php
-    require_once 'CrawlClass.php';
+    require_once './CrawlClass.php';
+    require_once './simple_html_dom.php';
 
-    class SqliScanner {
+    class SqliDetector {
         private $url = '';
         private $type = '';
         private $method = '';
@@ -14,24 +15,29 @@
         private $conn;
         private $inband;
         private $blind;
+        private $htmlObject;
+        private $vulnerability = array();
 
         function __construct() {
         }
 
-        private function make_inband_get_request(){
-            $this->conn = curl_init($this->url);
+        private function make_inband_get_request($u){
+            $this->conn = curl_init($u);
             curl_setopt($this->conn, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($this->conn, CURLOPT_SSL_VERIFYPEER,false);
             curl_setopt($this->conn, CURLOPT_TIMEOUT, 200);
             curl_setopt($this->conn, CURLOPT_HEADER, 1);
             curl_setopt($this->conn, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($this->conn, CURLOPT_REFERER, "http://google.com");
             curl_setopt($this->conn, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9');
             $this->res = curl_exec($this->conn);
+            $this->htmlObject = str_get_html($this->res);
         }
 
-        private function make_inband_post_request(){
-            $this->conn = curl_init($this->url);
+        private function make_inband_post_request($u){
+            $this->conn = curl_init($u);
             curl_setopt($this->conn, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($this->conn, CURLOPT_SSL_VERIFYPEER,false);
             curl_setopt($this->conn, CURLOPT_TIMEOUT, 200);
             curl_setopt($this->conn, CURLOPT_HEADER, 1);
             curl_setopt($this->conn, CURLOPT_FOLLOWLOCATION, 1);
@@ -40,24 +46,28 @@
             curl_setopt($this->conn, CURLOPT_POST, 1);
             curl_setopt($this->conn, CURLOPT_POSTFIELDS, $this->opt);
             $this->res = curl_exec($this->conn);
+            $this->htmlObject = str_get_html($this->res);
         }
 
-        private function make_blind_get_request(){
+        private function make_blind_get_request($u){
             $this->start = time();
-            $this->conn = curl_init($this->url);
+            $this->conn = curl_init($u);
             curl_setopt($this->conn, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($this->conn, CURLOPT_SSL_VERIFYPEER,false);
             curl_setopt($this->conn, CURLOPT_TIMEOUT, 200);
             curl_setopt($this->conn, CURLOPT_HEADER, 1);
             curl_setopt($this->conn, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($this->conn, CURLOPT_REFERER, "http://google.com");
             curl_setopt($this->conn, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9');
             $this->res = curl_exec($this->conn);
+            $this->htmlObject = str_get_html($this->res);
         }
 
-        private function make_blind_post_request(){
+        private function make_blind_post_request($u){
             $this->start = time();
-            $this->conn = curl_init($this->url);
+            $this->conn = curl_init($u);
             curl_setopt($this->conn, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($this->conn, CURLOPT_SSL_VERIFYPEER,false);
             curl_setopt($this->conn, CURLOPT_TIMEOUT, 200);
             curl_setopt($this->conn, CURLOPT_HEADER, 1);
             curl_setopt($this->conn, CURLOPT_FOLLOWLOCATION, 1);
@@ -66,6 +76,7 @@
             curl_setopt($this->conn, CURLOPT_POST, 1);
             curl_setopt($this->conn, CURLOPT_POSTFIELDS, "id=%27-sleep%285%29%23#");
             $this->res = curl_exec($this->conn);
+            $this->htmlObject = str_get_html($this->res);
         }
 
         public function setPayload($payload){
@@ -73,7 +84,6 @@
         }
 
         private $sql_error = array(
-            'You have an error in your SQL',
             'Division by zero in',
             'supplied argument is not a valid MySQL result resource in',
             'Call to a member function',
@@ -106,85 +116,47 @@
         }
 
         public function execute(){
-            if(strtolower($this->type) == 'inband'){
-                if(strtolower($this->method) == 'get'){
-                    echo "[-] Tes inband injection ( GET Method )\n";
-                    $this->url .= $this->payload;;
-                    $this->make_inband_get_request();
-                    if($this->res){
-                    foreach($this->sql_error as $error) {
-                        $e = strtolower($error);
-                        if(preg_match("/$e/", strtolower($this->res))) {
-                            $this->text =  "[+] SQL Injection vulnerable detected : $this->url\n\n";
-                        }else{
-                        }
-                    }
-                        print $this->text;
-                    } else {
-                        print false;
-                    }
-
-                    if($this->text == ''){
-                        $this->text =  "[+] SQL Injection vulnerable not detected : $this->url\n\n";
-                        print $this->text;
-                    }
-                }else{
-                    $this->make_inband_post_request();
-                    echo "[-] Tes inband injection ( POST Method )\n";
-                    if($this->res){
-                    foreach($this->sql_error as $error) {
-                        $e = strtolower($error);
-                        if(preg_match("/$e/", strtolower($this->res))) {
-                            $this->text =  "[+] SQL Injection vulnerable detected : $this->url\n\n";
-                        }else{
-                        }
-                    }
-                        print $this->text;
-                    } else {
-                        print false;
-                    }
-
-                    if($this->text == ''){
-                        $this->text =  "[+] SQL Injection vulnerable not detected : $this->url\n\n";
-                        print $this->text;
+            $this->setPayload("'");
+            //echo "[-] Tes inband injection ( GET Method )\n";
+            $this->make_inband_get_request($this->url . $this->payload);
+            if($this->res){
+                foreach($this->sql_error as $error) {
+                    $e = strtolower($error);
+                    if(preg_match("/$e/", strtolower($this->res))) {
+                        array_push($this->vulnerability, array("link" => $this->url, "type" => "inband", "method" => "get", "error" => $e, "payload" => $this->payload));
                     }
                 }
-            }else{
-                if(strtolower($this->method) == 'get'){
-                    echo "[-] Tes blind injection ( GET Method )\n";
-                    $this->url .= $this->payload;
-                    $this->make_blind_get_request();
-                    if($this->res){
-                        $this->end = time();
-                        if($this->end - $this->start > 9){
-                            $this->text =  "[+] SQL Injection vulnerable detected : $this->url\n\n";
-                        }
-                        print $this->text;
-                    }
-
-                    if($this->text == ''){
-                        $this->text =  "[+] SQL Injection vulnerable not detected : $this->url\n\n";
-                        print $this->text;
-                    }
-                }else{
-                    $this->make_blind_post_request();
-                    echo "[-] Tes blind injection ( POST Method )\n";
-                    if($this->res){
-                        $this->end = time();
-                        if($this->end - $this->start > 9){
-                            $this->text =  "[+] SQL Injection vulnerable detected : $this->url\n\n";
-                        }
-                        print $this->text;
-                    } else {
-                        print false;
-                    }
-
-                    if($this->text == ''){
-                        $this->text =  "[+] SQL Injection vulnerable not detected : $this->url\n\n";
-                        print $this->text;
+            }
+            $this->setOption("id='");
+            //echo "[-] Tes inband injection ( POST Method )\n";
+            $this->make_inband_post_request($this->url);
+            if($this->res){
+                foreach($this->sql_error as $error) {
+                    $e = strtolower($error);
+                    if(preg_match("/$e/", strtolower($this->res))) {
+                        array_push($this->vulnerability, array("link" => $this->url, "type" => "inband", "method" => "post", "error" => $e, "payload" => $this->opt));
                     }
                 }
+            }     
+            $this->setPayload("%27-sleep%285%29%23#");
+            //echo "[-] Tes blind injection ( GET Method )\n";
+            $this->make_blind_get_request($this->url . $this->payload);
+            if($this->res){
+                $this->end = time();
+                if($this->end - $this->start > 9){
+                    array_push($this->vulnerability, array("link" => $this->url, "type" => "blind", "method" => "get", "payload" => $this->payload));
+                }
+            }
+            $this->setOption("id=%27-sleep%285%29%23#");
+            //echo "[-] Tes blind injection ( POST Method )\n";
+            $this->make_blind_post_request($this->url);
+            if($this->res){
+                $this->end = time();
+                if($this->end - $this->start > 9){
+                    array_push($this->vulnerability, array("link" => $this->url, "type" => "blind", "method" => "post", "payload" => $this->opt));
+                }
+            } 
 
-            }         
+            return $this->vulnerability;
         }
     }
