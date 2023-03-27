@@ -1,6 +1,5 @@
 <?php
     namespace Jogjajoki\Sqltest;
-    require_once './simple_html_dom.php';
 
     class SqliDetector {
         private $url = '';
@@ -50,7 +49,6 @@
                 curl_setopt($this->conn, CURLOPT_REFERER, "http://google.com");
                 curl_setopt($this->conn, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9');
                 $this->res = curl_exec($this->conn);
-                $this->htmlObject = str_get_html($this->res);
                 $this->end = time();
                 if($this->end - $this->start > 9){
                     array_push($this->vulnerability, array("link" => $u, "type" => "blind", "method" => "GET", "payload" => $param));
@@ -65,7 +63,6 @@
                 curl_setopt($this->conn, CURLOPT_REFERER, "http://google.com");
                 curl_setopt($this->conn, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9');
                 $this->res = curl_exec($this->conn);
-                $this->htmlObject = str_get_html($this->res);
                 $this->checkVuln($this->res, $u, "GET", $param);
             }
             curl_close($this->conn);
@@ -85,7 +82,6 @@
                 curl_setopt($this->conn, CURLOPT_POST, 1);
                 curl_setopt($this->conn, CURLOPT_POSTFIELDS, $field);
                 $this->res = curl_exec($this->conn);
-                $this->htmlObject = str_get_html($this->res);
                 $this->end = time();
                 if($this->end - $this->start > 9){
                     array_push($this->vulnerability, array("link" => $u, "type" => "blind", "method" => "POST", "payload" => $field));
@@ -102,7 +98,6 @@
                 curl_setopt($this->conn, CURLOPT_POST, 1);
                 curl_setopt($this->conn, CURLOPT_POSTFIELDS, $field);
                 $this->res = curl_exec($this->conn);
-                $this->htmlObject = str_get_html($this->res);
                 $this->checkVuln($this->res, $u, "POST", $field);
             }
             curl_close($this->conn);            
