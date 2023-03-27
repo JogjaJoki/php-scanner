@@ -1,0 +1,14 @@
+Division by zero in
+supplied argument is not a valid MySQL result resource in
+Call to a member function
+Microsoft JET DatabaseODBC Microsoft Access Driver
+Microsoft OLE DB Provider for SQL Server
+Unclosed quotation mark
+Microsoft OLE DB Provider for Oracle
+[Macromedia][SQLServer JDBC Driver][SQLServer]Incorrect
+Incorrect syntax near
+you have an error in your sql syntax;
+warning: mysql
+Column count doesn\'t match value count
+unclosed quotation mark after the character string
+quoted string not properly terminated
