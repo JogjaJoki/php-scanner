@@ -1,6 +1,13 @@
 {
-    "require": {
-        "vlucas/phpdotenv": "^5.5",
-        "spatie/crawler": "^6.0"
-    }
+    "name": "jogjajoki/sqltest",
+    "description": "tes for security",
+    "type": "package",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Jogjajoki\\Sqltest\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "require": {}
 }
